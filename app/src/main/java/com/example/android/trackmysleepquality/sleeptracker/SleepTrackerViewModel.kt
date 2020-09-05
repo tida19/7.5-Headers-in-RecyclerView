@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.example.android.trackmysleepquality.sleeptracker
+
 import android.app.Application
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -24,64 +26,77 @@ import com.example.android.trackmysleepquality.database.SleepDatabaseDao
 import com.example.android.trackmysleepquality.database.SleepNight
 import com.example.android.trackmysleepquality.formatNights
 import kotlinx.coroutines.launch
+
 /**
  * ViewModel for SleepTrackerFragment.
  */
 class SleepTrackerViewModel(
         dataSource: SleepDatabaseDao,
         application: Application) : ViewModel() {
+
     /**
      * Hold a reference to SleepDatabase via SleepDatabaseDao.
      */
     val database = dataSource
+
     private var tonight = MutableLiveData<SleepNight?>()
+
     val nights = database.getAllNights()
+
     /**
      * Converted nights to Spanned for displaying.
      */
     val nightsString = Transformations.map(nights) { nights ->
         formatNights(nights, application.resources)
     }
+
     /**
      * If tonight has not been set, then the START button should be visible.
      */
     val startButtonVisible = Transformations.map(tonight) {
         null == it
     }
+
     /**
      * If tonight has been set, then the STOP button should be visible.
      */
     val stopButtonVisible = Transformations.map(tonight) {
         null != it
     }
+
     /**
      * If there are any nights in the database, show the CLEAR button.
      */
     val clearButtonVisible = Transformations.map(nights) {
         it?.isNotEmpty()
     }
+
     /**
      * Request a toast by setting this value to true.
      *
      * This is private because we don't want to expose setting this value to the Fragment.
      */
     private var _showSnackbarEvent = MutableLiveData<Boolean?>()
+
     /**
      * If this is true, immediately `show()` a toast and call `doneShowingSnackbar()`.
      */
     val showSnackBarEvent: LiveData<Boolean?>
         get() = _showSnackbarEvent
+
     /**
      * Variable that tells the Fragment to navigate to a specific [SleepQualityFragment]
      *
      * This is private because we don't want to expose setting this value to the Fragment.
      */
     private val _navigateToSleepQuality = MutableLiveData<SleepNight>()
+
     /**
      * If this is non-null, immediately navigate to [SleepQualityFragment] and call [doneNavigating]
      */
     val navigateToSleepQuality: LiveData<SleepNight>
         get() = _navigateToSleepQuality
+
     /**
      * Call this immediately after calling `show()` on a toast.
      *
@@ -91,6 +106,7 @@ class SleepTrackerViewModel(
     fun doneShowingSnackbar() {
         _showSnackbarEvent.value = null
     }
+
     /**
      * Call this immediately after navigating to [SleepQualityFragment]
      *
@@ -100,14 +116,17 @@ class SleepTrackerViewModel(
     fun doneNavigating() {
         _navigateToSleepQuality.value = null
     }
+
     init {
         initializeTonight()
     }
+
     private fun initializeTonight() {
         viewModelScope.launch {
             tonight.value = getTonightFromDatabase()
         }
     }
+
     /**
      *  Handling the case of the stopped app or forgotten recording,
      *  the start and end times will be the same.j
@@ -122,15 +141,19 @@ class SleepTrackerViewModel(
         }
         return night
     }
+
     private suspend fun insert(night: SleepNight) {
         database.insert(night)
     }
+
     private suspend fun update(night: SleepNight) {
         database.update(night)
     }
+
     private suspend fun clear() {
         database.clear()
     }
+
     /**
      * Executes when the START button is clicked.
      */
@@ -139,10 +162,13 @@ class SleepTrackerViewModel(
             // Create a new night, which captures the current time,
             // and insert it into the database.
             val newNight = SleepNight()
+
             insert(newNight)
+
             tonight.value = getTonightFromDatabase()
         }
     }
+
     /**
      * Executes when the STOP button is clicked.
      */
@@ -152,13 +178,17 @@ class SleepTrackerViewModel(
             // several nested ones this statement returns from.
             // In this case, we are specifying to return from launch().
             val oldNight = tonight.value ?: return@launch
+
             // Update the night in the database to add the end time.
             oldNight.endTimeMilli = System.currentTimeMillis()
+
             update(oldNight)
+
             // Set state to navigate to the SleepQualityFragment.
             _navigateToSleepQuality.value = oldNight
         }
     }
+
     /**
      * Executes when the CLEAR button is clicked.
      */
@@ -166,8 +196,10 @@ class SleepTrackerViewModel(
         viewModelScope.launch {
             // Clear the database table.
             clear()
+
             // And clear tonight since it's no longer in the database
             tonight.value = null
+
             // Show a snackbar message, because it's friendly.
             _showSnackbarEvent.value = true
         }
