@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.example.android.trackmysleepquality.sleeptracker
-
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -32,7 +30,6 @@ import com.example.android.trackmysleepquality.database.SleepDatabase
 import com.example.android.trackmysleepquality.database.SleepNight
 import com.example.android.trackmysleepquality.databinding.FragmentSleepTrackerBinding
 import com.google.android.material.snackbar.Snackbar
-
 /**
  * A fragment with buttons to record start and end times for sleep, which are saved in
  * a database. Cumulative data is displayed in a simple scrollable TextView.
@@ -40,7 +37,6 @@ import com.google.android.material.snackbar.Snackbar
  * The Clear button will clear all data from the database.
  */
 class SleepTrackerFragment : Fragment() {
-
     /**
      * Called when the Fragment is ready to display content to the screen.
      *
@@ -52,35 +48,27 @@ class SleepTrackerFragment : Fragment() {
      */
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-
         // Get a reference to the binding object and inflate the fragment views.
         val binding: FragmentSleepTrackerBinding = DataBindingUtil.inflate(
                 inflater, R.layout.fragment_sleep_tracker, container, false)
-
         val application = requireNotNull(this.activity).application
-
         // Create an instance of the ViewModel Factory.
         val dataSource = SleepDatabase.getInstance(application).sleepDatabaseDao
         val viewModelFactory = SleepTrackerViewModelFactory(dataSource, application)
-
         // Get a reference to the ViewModel associated with this fragment.
         val sleepTrackerViewModel =
                 ViewModelProvider(
                         this, viewModelFactory).get(SleepTrackerViewModel::class.java)
-
         // To use the View Model with data binding, you have to explicitly
         // give the binding object a reference to it.
         binding.sleepTrackerViewModel = sleepTrackerViewModel
-
         // Specify the current activity as the lifecycle owner of the binding.
         // This is necessary so that the binding can observe LiveData updates.
         binding.setLifecycleOwner(this)
-
         val adapter = SleepNightAdapter(SleepNightListener { nightId ->
             // Toast.makeText(context, "${nightId}", Toast.LENGTH_LONG).show()
             sleepTrackerViewModel.onSleepNightClicked(nightId)
         })
-
         binding.sleepList.adapter = adapter
         // Add an Observer on the state variable for showing a Snackbar message
         // when the CLEAR button is pressed.
@@ -96,7 +84,6 @@ class SleepTrackerFragment : Fragment() {
                 sleepTrackerViewModel.doneShowingSnackbar()
             }
         })
-
         // Add an Observer on the state variable for Navigating when STOP button is pressed.
         sleepTrackerViewModel.navigateToSleepQuality.observe(viewLifecycleOwner, Observer { night ->
             night?.let {
@@ -129,14 +116,8 @@ class SleepTrackerFragment : Fragment() {
                 sleepTrackerViewModel.onSleepDetailNavigated()
             }
         })
-
-
-
         val manager = GridLayoutManager(activity, 3)
         binding.sleepList.layoutManager = manager
-
-
         return binding.root
     }
 }
-

@@ -36,4 +36,4 @@ class SleepDetailViewModelFactory(
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
-} 
+}
